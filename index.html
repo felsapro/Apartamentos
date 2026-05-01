@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de Apartamentos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f7f4ef;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #1c2b2b;
+    padding: 2rem 2rem 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 1.2rem;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: #e8dcc8;
+    letter-spacing: 0.02em;
+  }
+
+  .logo span { color: #b89c6e; }
+
+  .count-badge {
+    font-size: 12px;
+    color: #7a9090;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
+
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-select, .filter-input {
+    background: #253535;
+    border: 1px solid #3a5050;
+    color: #d4c9b5;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .filter-select:focus, .filter-input:focus { border-color: #b89c6e; }
+  .filter-input::placeholder { color: #7a9090; }
+  .filter-input { width: 200px; }
+
+  .btn-clear {
+    background: transparent;
+    border: 1px solid #3a5050;
+    color: #7a9090;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-clear:hover { border-color: #b89c6e; color: #b89c6e; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-img {
+    height: 190px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .card:hover .card-img img { transform: scale(1.04); }
+
+  .badge-disponible, .badge-arrendado, .badge-reservado {
+    position: absolute;
+    top: 12px; left: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .badge-disponible { background: #d4edda; color: #1a6632; }
+  .badge-arrendado  { background: #f8d7da; color: #7b1020; }
+  .badge-reservado  { background: #fff3cd; color: #7d5a00; }
+
+  .piso-tag {
+    position: absolute;
+    bottom: 12px; right: 12px;
+    background: rgba(28,43,43,0.80);
+    color: #e8dcc8;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .card-body {
+    padding: 1.1rem 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: #1c2b2b;
+    font-weight: 600;
+  }
+
+  .card-price span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #888;
+    font-weight: 400;
+  }
+
+  .card-title { font-size: 14px; font-weight: 500; color: #333; margin-top: 2px; }
+
+  .card-location {
+    font-size: 12.5px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .card-location::before { content: '◎'; font-size: 10px; color: #b89c6e; }
+
+  .card-meta {
+    display: flex;
+    gap: 14px;
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: #666;
+  }
+
+  .meta-item { display: flex; align-items: center; gap: 4px; }
+  .meta-icon { font-size: 13px; }
+
+  .card-desc {
+    font-size: 12.5px;
+    color: #777;
+    line-height: 1.55;
+    margin-top: 6px;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    padding: 0.8rem 1.25rem 1rem;
+    border-top: 1px solid #f0ece5;
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-detail {
+    flex: 1;
+    background: #1c2b2b;
+    color: #e8dcc8;
+    border: none;
+    padding: 9px 0;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-detail:hover { background: #2d4545; }
+
+  .btn-edit {
+    background: transparent;
+    border: 1px solid #ddd;
+    color: #888;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-edit:hover { border-color: #b89c6e; color: #b89c6e; }
+
+  .btn-add {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: #b89c6e;
+    color: #fff;
+    border: none;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(184,156,110,0.35);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 200;
+  }
+
+  .btn-add:hover { transform: scale(1.1); box-shadow: 0 8px 24px rgba(184,156,110,0.45); }
+
+  .empty {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #aaa;
+    font-size: 15px;
+  }
+
+  /* Modal */
+  .modal-bg {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .modal-bg.open { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    margin: auto;
+  }
+
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: #1c2b2b;
+    margin-bottom: 1.4rem;
+  }
+
+  .form-group { margin-bottom: 1rem; }
+
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888;
+    margin-bottom: 5px;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #1a1a1a;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fafafa;
+  }
+
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: #b89c6e;
+    background: #fff;
+  }
+
+  .form-group textarea { resize: vertical; min-height: 80px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 1.5rem; }
+
+  .btn-save {
+    flex: 1;
+    background: #1c2b2b;
+    color: #e8dcc8;
+    border: none;
+    padding: 11px 0;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-save:hover { background: #2d4545; }
+
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid #ddd;
+    color: #888;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-cancel:hover { border-color: #ccc; color: #555; }
+
+  .btn-delete {
+    background: transparent;
+    border: 1px solid #f8d7da;
+    color: #c0392b;
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .modal-close {
+    position: absolute; top: 16px; right: 18px;
+    background: none; border: none;
+    font-size: 20px; color: #aaa; cursor: pointer;
+  }
+
+  .detail-img {
+    width: 100%; height: 220px; object-fit: cover;
+    border-radius: 10px; margin-bottom: 1rem;
+  }
+
+  .detail-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    color: #1c2b2b;
+  }
+
+  .detail-meta {
+    display: flex; gap: 16px; margin: 10px 0;
+    font-size: 13px; color: #666; flex-wrap: wrap;
+  }
+
+  .detail-meta span { display: flex; align-items: center; gap: 4px; }
+
+  .detail-desc {
+    font-size: 14px; color: #555; line-height: 1.6; margin-top: 10px;
+  }
+
+  /* Instrucciones */
+  .instrucciones {
+    background: #fffbf4;
+    border: 1px solid #e8d9be;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 2rem 0;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 13px;
+    color: #7a6040;
+    line-height: 1.6;
+  }
+
+  .instrucciones strong { color: #5a4020; }
+  .instrucciones a { color: #b89c6e; }
+
+  @media (max-width: 600px) {
+    .filters { flex-direction: column; align-items: stretch; }
+    .filter-input { width: 100%; }
+    .form-row { grid-template-columns: 1fr; }
+    .grid { padding: 1rem; gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">Mis <span>Apartamentos</span></div>
+    <div class="count-badge" id="count-badge">0 propiedades</div>
+  </div>
+  <div class="filters">
+    <input class="filter-input" type="text" id="search" placeholder="Buscar por nombre o dirección...">
+    <select class="filter-select" id="filter-hab">
+      <option value="">Habitaciones</option>
+      <option value="1">1 hab.</option>
+      <option value="2">2 hab.</option>
+      <option value="3">3 hab.</option>
+      <option value="4+">4+ hab.</option>
+    </select>
+    <select class="filter-select" id="filter-disp">
+      <option value="">Estado</option>
+      <option value="Disponible">Disponible</option>
+      <option value="Arrendado">Arrendado</option>
+      <option value="Reservado">Reservado</option>
+    </select>
+    <button class="btn-clear" onclick="clearFilters()">Limpiar filtros</button>
+  </div>
+</header>
+
+<div class="instrucciones">
+  <strong>💡 Cómo usar:</strong> Haz clic en <strong>+</strong> (botón dorado) para agregar apartamentos. Usa el ícono <strong>✏</strong> para editar. Para las fotos, sube tus imágenes gratis en <a href="https://imgbb.com" target="_blank">imgbb.com</a> y pega el link aquí. Los datos se guardan en este navegador automáticamente.
+</div>
+
+<div class="grid" id="grid"></div>
+
+<button class="btn-add" onclick="openAdd()" title="Agregar apartamento">+</button>
+
+<!-- Modal agregar/editar -->
+<div class="modal-bg" id="modal-form">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-form')">✕</button>
+    <h2 id="modal-title">Nuevo apartamento</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre / Referencia</label>
+        <input type="text" id="f-nombre" placeholder="Ej: Apto 301">
+      </div>
+      <div class="form-group">
+        <label>Precio (COP / mes)</label>
+        <input type="number" id="f-precio" placeholder="Ej: 1200000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Ubicación / Dirección</label>
+      <input type="text" id="f-ubicacion" placeholder="Ej: Calle 5 #10-20, Cali">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Habitaciones</label>
+        <select id="f-hab">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4+">4+</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Piso</label>
+        <input type="text" id="f-piso" placeholder="Ej: 3">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Disponibilidad</label>
+      <select id="f-disp">
+        <option value="Disponible">Disponible</option>
+        <option value="Arrendado">Arrendado</option>
+        <option value="Reservado">Reservado</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>URL de foto (desde imgbb.com u otro)</label>
+      <input type="url" id="f-foto" placeholder="https://i.ibb.co/tu-imagen.jpg">
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <textarea id="f-desc" placeholder="Describe el apartamento: baños, estrato, servicios incluidos, amoblado..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-form')">Cancelar</button>
+      <button class="btn-delete" id="btn-delete" style="display:none" onclick="deleteApt()">Eliminar</button>
+      <button class="btn-save" onclick="saveApt()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle -->
+<div class="modal-bg" id="modal-detail">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+    <img id="d-img" class="detail-img" src="" alt="">
+    <div id="d-badge"></div>
+    <div class="detail-price" id="d-price"></div>
+    <div id="d-name" style="font-size:15px;font-weight:500;color:#444;margin-top:4px;"></div>
+    <div style="font-size:13px;color:#888;margin-top:4px;display:flex;align-items:center;gap:4px;">
+      <span style="color:#b89c6e;">◎</span><span id="d-loc-txt"></span>
+    </div>
+    <div class="detail-meta" id="d-meta"></div>
+    <div class="detail-desc" id="d-desc"></div>
+    <div class="modal-actions" style="margin-top:1.2rem;">
+      <button class="btn-cancel" onclick="closeModal('modal-detail')">Cerrar</button>
+      <button class="btn-save" onclick="editFromDetail()">✏ Editar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PLACEHOLDER = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80';
+
+  let apts = JSON.parse(localStorage.getItem('apts_catalog') || 'null') || [];
+  let editingId = null;
+  let detailId = null;
+
+  function save() { localStorage.setItem('apts_catalog', JSON.stringify(apts)); }
+
+  function fmt(n) {
+    return 'COP ' + Number(n).toLocaleString('es-CO');
+  }
+
+  function badgeClass(d) {
+    if (d === 'Disponible') return 'badge-disponible';
+    if (d === 'Arrendado') return 'badge-arrendado';
+    return 'badge-reservado';
+  }
+
+  function filtered() {
+    const s = document.getElementById('search').value.toLowerCase();
+    const h = document.getElementById('filter-hab').value;
+    const d = document.getElementById('filter-disp').value;
+    return apts.filter(a => {
+      if (s && !a.nombre.toLowerCase().includes(s) && !a.ubicacion.toLowerCase().includes(s)) return false;
+      if (h && a.hab !== h) return false;
+      if (d && a.disp !== d) return false;
+      return true;
+    });
+  }
+
+  function render() {
+    const list = filtered();
+    const grid = document.getElementById('grid');
+    document.getElementById('count-badge').textContent = apts.length + ' propiedad' + (apts.length !== 1 ? 'es' : '');
+
+    if (!list.length) {
+      grid.innerHTML = apts.length === 0
+        ? '<div class="empty">Aún no hay apartamentos. Haz clic en <strong>+</strong> para agregar el primero.</div>'
+        : '<div class="empty">No se encontraron apartamentos con esos filtros.</div>';
+      return;
+    }
+
+    grid.innerHTML = list.map((a, i) => `
+      <div class="card" style="animation-delay:${i * 0.05}s">
+        <div class="card-img">
+          <img src="${a.foto || PLACEHOLDER}" alt="${a.nombre}" onerror="this.src='${PLACEHOLDER}'">
+          <div class="${badgeClass(a.disp)}">${a.disp}</div>
+          <div class="piso-tag">Piso ${a.piso}</div>
+        </div>
+        <div class="card-body">
+          <div class="card-price">${fmt(a.precio)} <span>/ mes</span></div>
+          <div class="card-title">${a.nombre}</div>
+          <div class="card-location">${a.ubicacion}</div>
+          <div class="card-meta">
+            <div class="meta-item"><span class="meta-icon">🛏</span> ${a.hab} hab.</div>
+            <div class="meta-item"><span class="meta-icon">🏢</span> Piso ${a.piso}</div>
+          </div>
+          <div class="card-desc">${a.desc || 'Sin descripción.'}</div>
+        </div>
+        <div class="card-footer">
+          <button class="btn-detail" onclick="openDetail(${a.id})">Ver detalles</button>
+          <button class="btn-edit" onclick="openEdit(${a.id})">✏</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openAdd() {
+    editingId = null;
+    document.getElementById('modal-title').textContent = 'Nuevo apartamento';
+    document.getElementById('btn-delete').style.display = 'none';
+    ['nombre','precio','ubicacion','piso','desc','foto'].forEach(f => document.getElementById('f-' + f).value = '');
+    document.getElementById('f-hab').value = '2';
+    document.getElementById('f-disp').value = 'Disponible';
+    document.getElementById('modal-form').classList.add('open');
+  }
+
+  function openEdit(id) {
+    const a = apts.find(x => x.id === id);
+    if (!a) return;
+    editingId = id;
+    document.getElementById('modal-title').textContent = 'Editar apartamento';
+    document.getElementById('btn-delete').style.display = 'inline-block';
+    document.getElementById('f-nombre').value = a.nombre;
+    document.getElementById('f-precio').value = a.precio;
+    document.getElementById('f-ubicacion').value = a.ubicacion;
+    document.getElementById('f-hab').value = a.hab;
+    document.getElementById('f-piso').value = a.piso;
+    document.getElementById('f-disp').value = a.disp;
+    document.getElementById('f-foto').value = a.foto || '';
+    document.getElementById('f-desc').value = a.desc || '';
+    closeModal('modal-detail');
+    document.getElementById('modal-form').classList.add('open');
+  }
+
+  function saveApt() {
+    const data = {
+      nombre: document.getElementById('f-nombre').value.trim() || 'Sin nombre',
+      precio: Number(document.getElementById('f-precio').value) || 0,
+      ubicacion: document.getElementById('f-ubicacion').value.trim() || '',
+      hab: document.getElementById('f-hab').value,
+      piso: document.getElementById('f-piso').value.trim() || '-',
+      disp: document.getElementById('f-disp').value,
+      foto: document.getElementById('f-foto').value.trim() || '',
+      desc: document.getElementById('f-desc').value.trim() || '',
+    };
+    if (editingId) {
+      const idx = apts.findIndex(x => x.id === editingId);
+      apts[idx] = { ...apts[idx], ...data };
+    } else {
+      data.id = Date.now();
+      apts.push(data);
+    }
+    save(); render();
+    closeModal('modal-form');
+  }
+
+  function deleteApt() {
+    if (!editingId) return;
+    if (!confirm('¿Eliminar este apartamento? Esta acción no se puede deshacer.')) return;
+    apts = apts.filter(x => x.id !== editingId);
+    save(); render();
+    closeModal('modal-form');
+  }
+
+  function openDetail(id) {
+    const a = apts.find(x => x.id === id);
+    if (!a) return;
+    detailId = id;
+    document.getElementById('d-img').src = a.foto || PLACEHOLDER;
+    document.getElementById('d-badge').innerHTML = `<span class="${badgeClass(a.disp)}" style="position:static;display:inline-block;margin:8px 0;">${a.disp}</span>`;
+    document.getElementById('d-price').textContent = fmt(a.precio) + ' / mes';
+    document.getElementById('d-name').textContent = a.nombre;
+    document.getElementById('d-loc-txt').textContent = a.ubicacion;
+    document.getElementById('d-meta').innerHTML = `
+      <span>🛏 ${a.hab} habitaciones</span>
+      <span>🏢 Piso ${a.piso}</span>
+    `;
+    document.getElementById('d-desc').textContent = a.desc || 'Sin descripción.';
+    document.getElementById('modal-detail').classList.add('open');
+  }
+
+  function editFromDetail() { openEdit(detailId); }
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function clearFilters() {
+    document.getElementById('search').value = '';
+    document.getElementById('filter-hab').value = '';
+    document.getElementById('filter-disp').value = '';
+    render();
+  }
+
+  document.getElementById('search').addEventListener('input', render);
+  document.getElementById('filter-hab').addEventListener('change', render);
+  document.getElementById('filter-disp').addEventListener('change', render);
+
+  document.querySelectorAll('.modal-bg').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+
+  render();
+</script>
+</body>
+</html>
